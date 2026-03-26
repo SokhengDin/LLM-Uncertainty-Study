@@ -1,65 +1,45 @@
 import requests
-import time
 import numpy as np
-from typing import List, Dict
+
+CHOICES = ["A", "B", "C", "D", "E", "F"]
+
 
 class OllamaClient:
-    """Client for Ollama API to get logprobs for multiple-choice questions."""
-    
-    def __init__(self, model_name: str = "qwen3.5:0.8b", base_url: str = "http://localhost:11434"):
+    """Ollama API client — scores each choice via continuation logprob."""
+
+    def __init__(self, model_name: str = "qwen3.5:4b", base_url: str = "http://localhost:11434"):
         self.model_name = model_name
-        self.base_url = base_url
-        self.api_url = f"{base_url}/api/generate"
-    
-    def softmax(self, x):
-        e_x = np.exp(x - np.max(x))
-        return e_x / e_x.sum()
-    
-    def get_choice_probs(self, prompt: str, num_samples: int = 50) -> List[float]:
+        self.base_url   = base_url
+        self.api_url    = f"{base_url}/api/generate"
+
+    def _get_logprob(self, prompt: str) -> float:
+        """Return the logprob of the last token in the prompt."""
+        response = requests.post(
+            self.api_url,
+            json={
+                "model":   self.model_name,
+                "prompt":  prompt,
+                "stream":  False,
+                "logprobs": True,
+                "think":   False,
+                "options": {"temperature": 0, "num_predict": 1},
+            },
+            timeout=60,
+        )
+        logprobs_list = response.json().get("logprobs", [])
+        if logprobs_list:
+            return logprobs_list[-1].get("logprob", -1e9)
+        return -1e9
+
+    def get_choice_logits(self, prompt: str) -> np.ndarray:
         """
-        Get probability distribution over choices using sampling method.
-        This approximates softmax probabilities (as in paper Section 6.7).
-        
+        Score each choice A-F by appending it to the prompt and reading
+        the logprob of that continuation token.
+
         Returns:
-            List of 6 probabilities for options A, B, C, D, E, F
+            np.ndarray of shape (6,) -- logprobs for A, B, C, D, E, F.
         """
-        counts = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0}
-        
-        for _ in range(num_samples):
-            try:
-                response = requests.post(
-                    self.api_url,
-                    json={
-                        "model": self.model_name,
-                        "prompt": prompt + "\n\nAnswer with only the letter of the correct choice:",
-                        "stream": False,
-                        "temperature": 1.0,
-                        "max_tokens": 5
-                    },
-                    timeout=30
-                )
-                result = response.json()
-                answer = result.get("response", "").strip().upper()
-                
-                for choice in ["A", "B", "C", "D", "E", "F"]:
-                    if choice in answer:
-                        counts[choice] += 1
-                        break
-            except Exception as e:
-                print(f"Error: {e}")
-                time.sleep(1)
-                continue
-        
-        total = sum(counts.values())
-        if total == 0:
-            return [1.0/6] * 6
-        
-        return [counts[choice] / total for choice in ["A", "B", "C", "D", "E", "F"]]
-    
-    def get_choice_logits(self, prompt: str, num_samples: int = 50) -> np.ndarray:
-        """
-        Get logits (log of probabilities) for each choice.
-        """
-        probs = self.get_choice_probs(prompt, num_samples)
-        logits = np.log(np.array(probs) + 1e-10)
+        logits = np.full(len(CHOICES), -1e9, dtype=np.float32)
+        for i, choice in enumerate(CHOICES):
+            logits[i] = self._get_logprob(prompt + " " + choice)
         return logits

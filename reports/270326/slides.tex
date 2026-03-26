@@ -1,0 +1,397 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usetheme{CambridgeUS}
+\usecolortheme{beaver}
+
+% ── accent colours ──────────────────────────────────────────────
+\definecolor{darkred}{RGB}{180,30,30}
+\definecolor{hlblue}{RGB}{220,235,255}
+\definecolor{hlgreen}{RGB}{220,245,220}
+\definecolor{codebg}{RGB}{245,245,250}
+\definecolor{steelblue}{RGB}{70,130,180}
+
+% ── block style ─────────────────────────────────────────────────
+\setbeamertemplate{blocks}[rounded][shadow=true]
+\setbeamercolor{block title}{bg=darkred!85,fg=white}
+\setbeamercolor{block body}{bg=darkred!5,fg=black}
+
+% ── pseudo-code helpers ─────────────────────────────────────────
+\newcommand{\pckw}[1]{\textcolor{steelblue}{\textbf{#1}}}
+\newcommand{\pccomment}[1]{\textcolor{gray}{\textit{// #1}}}
+
+% ── item spacing ────────────────────────────────────────────────
+\setbeamertemplate{itemize item}{\textcolor{darkred}{\textbullet}}
+\setbeamertemplate{itemize subitem}{\textcolor{darkred}{--}}
+\setlength{\leftmargini}{1.2em}
+
+% ── footline ────────────────────────────────────────────────────
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.40\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.40\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.20\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+
+% ── metadata ────────────────────────────────────────────────────
+\title[LLM Uncertainty Bench]{Benchmarking LLMs via Uncertainty Quantification}
+\author[Ye et al., NeurIPS 2024]{%
+  Fanghua Ye \and Mingming Yang \and Jianhui Pang \and Longyue Wang \\[2pt]
+  Derek F.\ Wong \and Emine Yilmaz \and Shuming Shi \and Zhaopeng Tu}
+\institute{Tencent AI Lab \quad $\cdot$ \quad UCL \quad $\cdot$ \quad University of Macau}
+\date{NeurIPS 2024 \,--\, Datasets and Benchmarks Track}
+
+% ── helpers ─────────────────────────────────────────────────────
+\newcommand{\hrow}{\rowcolor{hlblue}}
+\newcommand{\grow}{\rowcolor{hlgreen}}
+
+\begin{document}
+
+\maketitle
+
+% ================================================================
+\begin{frame}{Objective}
+
+\begin{block}{\textbf{Problem}}
+  Current LLM leaderboards (HuggingFace, OpenCompass \ldots) rank models
+  by \textcolor{darkred}{\textbf{accuracy only}}.\\[5pt]
+  Two models with \emph{equal accuracy} may differ greatly in
+  \textbf{uncertainty} -- yet benchmarks treat them identically.
+\end{block}
+
+\bigskip
+
+\begin{block}{\textbf{Goal}}
+  Integrate \textbf{uncertainty quantification} into LLM benchmarking
+  via \textbf{conformal prediction} --
+  a statistically rigorous, distribution-free, model-agnostic method.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Methodology -- Conformal Prediction}
+
+\begin{block}{\textbf{Coverage Guarantee}}
+  For test instance $X_t$ with true label $Y_t$, CP outputs a
+  \textbf{prediction set} $\mathcal{C}(X_t)\subseteq\mathcal{Y}$ such that:
+  $$P\!\bigl(Y_t \in \mathcal{C}(X_t)\bigr) \;\geq\; 1-\alpha$$
+  $\alpha$ = user-specified error rate \quad
+  (e.g.\ $\alpha=0.1 \;\Rightarrow\;$ \textbf{90\,\%} coverage guarantee).
+\end{block}
+
+\bigskip
+
+\begin{block}{\textbf{Uncertainty Measure}}
+  \textbf{Set Size (SS)} $=$ average $|\mathcal{C}(X_t)|$ over all test instances.\\[4pt]
+  \hspace*{1em}
+  \textcolor{steelblue}{Small SS} $\Rightarrow$ \textbf{confident model} \quad
+  \textcolor{darkred}{Large SS} $\Rightarrow$ \textbf{uncertain model}
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Methodology -- Score Functions}
+
+\begin{columns}[T]
+  \begin{column}{0.48\textwidth}
+    \begin{block}{\textbf{LAC} \small-- Least Ambiguous Classifier}
+      $$s(X,Y)=1-f(X)_Y$$
+      Uses softmax score of the true label only.\\[4pt]
+      \textcolor{steelblue}{$\Rightarrow$ tends to smaller sets.}
+    \end{block}
+  \end{column}
+  \begin{column}{0.48\textwidth}
+    \begin{block}{\textbf{APS} \small-- Adaptive Prediction Sets}
+      $$s(X,Y)=\!\sum_{\substack{Y'\in\mathcal{Y}:\\f(X)_{Y'}\geq f(X)_Y}}\!f(X)_{Y'}$$
+      Accumulates ranked softmax scores.\\[4pt]
+      \textcolor{steelblue}{$\Rightarrow$ better on hard instances.}
+    \end{block}
+  \end{column}
+\end{columns}
+
+\vspace{10pt}
+\centering
+\begin{tikzpicture}
+  \node[draw=darkred,rounded corners,inner sep=5pt,fill=darkred!8]{%
+    \small\textit{Final metrics averaged over \textbf{LAC} and \textbf{APS}.}};
+\end{tikzpicture}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Algorithm -- CP for LLMs}
+
+\begin{tcolorbox}[
+  enhanced, skin=bicolor,
+  colback=codebg, colbacklower=codebg!60,
+  colframe=steelblue!60, arc=3pt,
+  boxrule=0.6pt, left=4pt, right=4pt, top=3pt, bottom=3pt,
+  title={\scriptsize\textbf{Algorithm 1:} Conformal Prediction for LLMs
+         \hfill\textcolor{white!70}{\scriptsize
+           \textbf{Input:} $\mathcal{M},\,\mathcal{D},\,\alpha$
+           \quad\textbf{Output:} Acc,\,SS,\,CR,\,UAcc}},
+  fonttitle=\small\bfseries\color{white},
+  coltitle=white, attach boxed title to top left,
+  boxed title style={colback=steelblue!80, arc=2pt, boxrule=0pt,
+                     left=4pt, right=4pt}
+]
+\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{\,}r@{\;\;}l@{\quad}l@{}}
+  \textcolor{steelblue}{\textbf{1}} &
+    \pckw{for each} prompt strategy $p \in \{$base, shared, task$\}$ \pckw{do} &
+    \pccomment{3 strategies} \\
+  \textcolor{steelblue}{\textbf{2}} &
+    \quad\pckw{for each} ICL setting $k \in \{$0-shot, few-shot, CoT$\}$ \pckw{do} &
+    \pccomment{3 ICL modes} \\
+  \textcolor{steelblue}{\textbf{3}} &
+    \quad\quad $P(X)\leftarrow\mathrm{Softmax}(\mathrm{logits}_{\mathcal{M}}(X_{p,k}))$\; \pckw{for all} $X\in\mathcal{D}$ &
+    \pccomment{query LLM} \\
+  \textcolor{steelblue}{\textbf{4}} &
+    \quad\quad $\mathcal{D}\to\mathcal{D}_{\mathrm{cal}}\ (50\%)+\mathcal{D}_{\mathrm{test}}\ (50\%)$ &
+    \pccomment{random split} \\
+  \textcolor{steelblue}{\textbf{5}} &
+    \quad\quad \pckw{for each} $s \in \{$LAC, APS$\}$ \pckw{do} &
+    \pccomment{2 score fns} \\
+  \textcolor{steelblue}{\textbf{6}} &
+    \quad\quad\quad $s_i \leftarrow s(X_c^{(i)}, Y_c^{(i)})$\; \pckw{for all} $i\in\mathcal{D}_{\mathrm{cal}}$ &
+    \pccomment{nonconformity scores} \\
+  \textcolor{steelblue}{\textbf{7}} &
+    \quad\quad\quad $\hat{q}\leftarrow\mathrm{Quantile}\!\left(\{s_i\},\,\tfrac{\lceil(n+1)(1-\alpha)\rceil}{n}\right)$ &
+    \pccomment{adaptive threshold} \\
+  \textcolor{steelblue}{\textbf{8}} &
+    \quad\quad\quad $\mathcal{C}(X_t)\leftarrow\{Y'\in\mathcal{Y}:s(X_t,Y')\leq\hat{q}\}$\; \pckw{for all} $X_t\in\mathcal{D}_{\mathrm{test}}$ &
+    \pccomment{prediction sets} \\
+  \textcolor{steelblue}{\textbf{9}} &
+    \quad\quad\quad \pckw{if} $\mathcal{C}(X_t)=\emptyset$\;\pckw{then keep} $\arg\max_{Y'}P(X_t)_{Y'}$ & \\[2pt]
+  \textcolor{steelblue}{\textbf{10}} &
+    \pckw{return} avg over $p,k,s$:\;
+    $\mathrm{Acc},\;\mathrm{SS},\;\mathrm{CR},\;
+    \mathrm{UAcc}=\tfrac{\mathrm{Acc}}{\mathrm{SS}}\sqrt{|\mathcal{Y}|}$ &
+\end{tabular}
+\end{tcolorbox}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Methodology -- Evaluation Metrics}
+
+\renewcommand{\arraystretch}{1.65}
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  \textbf{Metric} & \textbf{Formula} & \textbf{Meaning} \\
+  \midrule
+  Acc &
+    $\dfrac{1}{|\mathcal{D}_{\mathrm{test}}|}\sum\mathbf{1}[Y_p=Y_t]$ &
+    Prediction accuracy \\
+  SS  &
+    $\dfrac{1}{|\mathcal{D}_{\mathrm{test}}|}\sum|\mathcal{C}(X_t)|$ &
+    Uncertainty ($\uparrow$ more uncertain) \\
+  CR  &
+    $\dfrac{1}{|\mathcal{D}_{\mathrm{test}}|}\sum\mathbf{1}[Y_t\in\mathcal{C}(X_t)]$ &
+    Coverage ($\geq1{-}\alpha$ guaranteed) \\
+  \bottomrule
+\end{tabular}
+
+\bigskip
+
+\begin{block}{\textbf{New: Uncertainty-aware Accuracy (UAcc)}}
+  $$\mathrm{UAcc}=\frac{\mathrm{Acc}}{\mathrm{SS}}\sqrt{|\mathcal{Y}|},
+  \qquad |\mathcal{Y}|=6$$
+  Rewards models that are both \textbf{accurate} and \textbf{certain}.
+  Can \textbf{reverse rankings} vs.\ Acc alone.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Results -- All Base Models}
+
+\begin{block}{\scriptsize Source: Table\,1 -- mean of LAC \& APS, avg.\ over 5 tasks}
+\small
+\renewcommand{\arraystretch}{1.12}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{LLM} & \textbf{Acc\,(\%)\,$\uparrow$} & \textbf{SS\,$\downarrow$} & \textbf{UAcc\,$\uparrow$} \\
+\midrule
+\hrow Yi-34B       & 81.46 & 1.93 & 121.09 \\
+Qwen-72B           & 78.05 & 2.06 & 109.96 \\
+Qwen-14B           & 74.00 & 2.17 & 102.28 \\
+Llama-2-70B        & 72.24 & 2.16 &  94.62 \\
+DeepSeek-67B       & 71.66 & 2.15 &  91.07 \\
+Yi-6B              & 68.97 & 2.36 &  83.53 \\
+Mistral-7B         & 64.14 & 2.43 &  70.84 \\
+Llama-2-13B        & 60.42 & 2.56 &  61.07 \\
+Qwen-7B            & 59.87 & 2.63 &  64.34 \\
+InternLM-7B        & 49.31 & 3.41 &  40.83 \\
+Llama-2-7B         & 46.53 & 3.09 &  38.71 \\
+DeepSeek-7B        & 45.87 & 3.13 &  36.80 \\
+Qwen-1.8B          & 42.34 & 3.38 &  32.95 \\
+MPT-7B             & 27.18 & 3.57 &  18.70 \\
+Falcon-7B          & 24.84 & 3.75 &  16.28 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Results -- Three Key Findings}
+
+\begin{block}{\textcolor{white}{\textbf{Finding 1:} Higher Accuracy $\neq$ Lower Uncertainty}}
+  InternLM-7B outperforms MPT-7B by \textbf{+19.34\,\%} Acc on DRS,
+  yet shows \textbf{higher} SS (3.63 vs.\ 3.59).
+  Rankings by Acc and SS diverge across \emph{all} tasks.
+\end{block}
+
+\medskip
+
+\begin{block}{\textcolor{white}{\textbf{Finding 2:} Larger $\neq$ More Certain}}
+  Qwen 1.8B$\to$14B: Acc and certainty both improve.\\
+  Qwen 14B$\to$72B: Acc rises, but SS \textbf{increases} on RC \& DRS -- non-monotonic.
+\end{block}
+
+\medskip
+
+\begin{block}{\textcolor{white}{\textbf{Finding 3:} Instruction Finetuning Raises Uncertainty}}
+  Chat-V1 and Chat-V2 show \textbf{consistently higher SS} than base models
+  across Llama-2, Yi, DeepSeek, and Falcon series.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Results -- CP vs.\ Perplexity (InternLM-7B)}
+
+\begin{block}{\textbf{Table\,2:} Coverage Rate (\%) \& Set Size -- target CR $\geq90\,\%$}
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{\textbf{CR (\%)}} & \multicolumn{2}{c}{\textbf{SS}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Task} & \textbf{CP} & \textbf{PPL} & \textbf{CP} & \textbf{PPL} \\
+\midrule
+QA  & \textbf{90.68} & \textcolor{darkred}{83.44} & 3.49 & 2.89 \\
+RC  & \textbf{93.28} & 95.48 & 2.19 & 2.39 \\
+CI  & \textbf{90.10} & 96.25 & 3.28 & 3.97 \\
+DRS & \textbf{90.40} & \textcolor{darkred}{86.80} & 3.63 & 3.42 \\
+DS  & \textbf{90.34} & \textcolor{darkred}{87.13} & 4.47 & 4.33 \\
+\midrule
+Avg & \textbf{90.96} & 89.82 & 3.41 & 3.40 \\
+\bottomrule
+\end{tabular}
+\end{center}
+PPL \textcolor{darkred}{\textbf{fails}} 90\,\% on QA, DRS, DS.\quad
+CP \textbf{always meets} the coverage guarantee.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Results -- ECE Comparison (InternLM-7B)}
+
+\begin{block}{\textbf{Table\,3:} Expected Calibration Error (\%) -- lower is better}
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Task} & \textbf{CP} & \textbf{Entropy} & \textbf{$P_{\max}$} \\
+\midrule
+QA  & 15.83 & 15.83 & 15.83 \\
+RC  & \textbf{1.33}  & 1.32  & 1.41  \\
+CI  & \textbf{3.16}  & 3.45  & 3.75  \\
+DRS & \textbf{12.11} & 12.40 & 12.45 \\
+DS  & \textbf{9.30}  & 9.30  & 9.62  \\
+\midrule
+\hrow Avg & \textbf{8.35} & 8.46 & 8.61 \\
+\bottomrule
+\end{tabular}
+\end{center}
+CP achieves the \textbf{lowest average ECE} across all methods.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Our Experiment -- Qwen3.5-4B on MMLU}
+
+\begin{block}{\textbf{Setup}}
+\small
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Model: \texttt{qwen3.5:4b} via Ollama (local inference)
+  \item Dataset: MMLU ($n=200$ test samples, 1-shot, base prompt)
+  \item Logits via continuation logprob scoring (6 API calls/question)
+  \item CP parameters: $\alpha=0.1$,\; cal/test split 50\,\%
+\end{itemize}
+\end{block}
+
+\medskip
+
+\begin{block}{\textbf{Results}}
+\renewcommand{\arraystretch}{1.3}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Model} & \textbf{Acc\,(\%)\,$\uparrow$} & \textbf{SS\,$\downarrow$} & \textbf{CR\,(\%)} \\
+\midrule
+\grow Qwen3.5-4B & 53.40 & 3.96 & \textbf{93.69} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\smallskip
+CR $\geq 90\,\%$ target \textbf{met}.\quad
+SS\,$=3.96$ reflects moderate uncertainty on MMLU.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Conclusion \& Future Work}
+
+\begin{block}{\textbf{Conclusion}}
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Accuracy alone is \textbf{insufficient} for LLM evaluation.
+  \item Conformal prediction offers a \textbf{rigorous, model-agnostic} uncertainty measure.
+  \item New \textbf{UAcc} metric jointly captures accuracy and certainty.
+  \item Three findings: Acc\,$\neq$\,certainty;\; larger\,$\neq$\,more certain;\;
+        finetuning raises uncertainty.
+\end{itemize}
+\end{block}
+
+\medskip
+
+\begin{block}{\textbf{Future Work}}
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Extend CP to \textbf{free-form text generation} beyond MCQA.
+  \item Apply to \textbf{multi-modal} and \textbf{closed-source} LLMs (GPT-4 etc.).
+  \item Integrate uncertainty into \textbf{RAG} and \textbf{in-context learning} pipelines.
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+\end{document}
