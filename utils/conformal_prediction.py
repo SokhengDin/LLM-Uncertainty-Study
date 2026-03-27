@@ -2,7 +2,6 @@ import numpy as np
 
 OPTIONS = ["A", "B", "C", "D", "E", "F"]
 
-
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()

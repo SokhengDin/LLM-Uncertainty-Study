@@ -17,12 +17,12 @@ class OllamaClient:
         response = requests.post(
             self.api_url,
             json={
-                "model":   self.model_name,
-                "prompt":  prompt,
-                "stream":  False,
-                "logprobs": True,
-                "think":   False,
-                "options": {"temperature": 0, "num_predict": 1},
+                "model"     : self.model_name,
+                "prompt"    : prompt,
+                "stream"    : False,
+                "logprobs"  : True,
+                "think"     : False,
+                "options"   : {"temperature": 0, "num_predict": 1},
             },
             timeout=60,
         )
