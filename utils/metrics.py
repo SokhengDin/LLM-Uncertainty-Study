@@ -3,12 +3,12 @@ from collections import Counter
 
 OPTIONS = ["A", "B", "C", "D", "E", "F"]
 
-
+# Softmax
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
 
-
+# Standard Accuracy
 def get_accuracy(logits_data, raw_data):
     res, preds = [], []
     for idx, row in enumerate(raw_data):
