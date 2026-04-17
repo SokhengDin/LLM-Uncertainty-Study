@@ -165,6 +165,9 @@ def main(args):
             pickle.dump(model_outputs, f)
         print(f"Saved to {save_path}")
 
+    client.unload()
+    print(f"Model {args.model} unloaded from RAM.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

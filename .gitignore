@@ -46,7 +46,17 @@ htmlcov/
 uv.lock
 
 
-# ignore chunk of the output 
+# Outputs
 outputs_base/
-outputs_base/*
-outputs_base
+outputs/
+
+# Generated figures
+figures/*.png
+figures/*.pdf
+
+# macOS
+.DS_Store
+reports/.DS_Store
+
+# Report PDFs (compiled)
+reports/**/*.pdf

@@ -98,6 +98,112 @@
 \end{frame}
 
 % ================================================================
+\begin{frame}{Tasks \& Datasets}
+
+\begin{block}{\textbf{5 NLP Tasks -- all reformulated as 6-option MCQA (A--F)}}
+\scriptsize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Task} & \textbf{Dataset} & \textbf{Input} & \textbf{Example question} \\
+\midrule
+QA  & MMLU        & Question only &
+  \textit{``What is the powerhouse of the cell?''} \\
+RC  & CosmosQA    & Context + Q &
+  \textit{``Based on the passage, why did she leave?''} \\
+CI  & HellaSwag   & Context + Q &
+  \textit{``A man starts boiling water\ldots\ what happens next?''} \\
+DRS & HaluEval-Dial & Dialogue + Q &
+  \textit{``Which response best continues this conversation?''} \\
+DS  & HaluEval-Sum & Document + Q &
+  \textit{``Which summary is accurate and non-hallucinated?''} \\
+\bottomrule
+\end{tabular}
+\end{block}
+
+\smallskip
+
+\begin{block}{\textbf{6 options per question}}
+\small
+A, B, C, D = content options \quad
+\textbf{E} = \textit{``I don't know''} \quad
+\textbf{F} = \textit{``None of the above''}\\
+\smallskip
+Each dataset has \textbf{10,000 instances}; split 50\% cal / 50\% test.
+\end{block}
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{Prompting Strategies}
+
+\begin{block}{\textbf{Base Prompt} -- question + choices, no instruction}
+\scriptsize\ttfamily
+Question: What is the capital of France?\\
+Choices: A. Berlin\ \ B. Paris\ \ C. Madrid\ \ D. Rome\ \ E. I don't know\ \ F. None of the above\\
+Answer:
+\end{block}
+
+\begin{block}{\textbf{Shared Instruction Prompt} -- general task description prepended}
+\scriptsize\ttfamily
+The following is a multiple-choice question with six potential answers.\\
+Only one is correct. You only need to output the option.\\[2pt]
+Question: What is the capital of France? \ldots\ Answer:
+\end{block}
+
+\begin{block}{\textbf{Task-specific Instruction Prompt} -- task-tailored description}
+\scriptsize\ttfamily
+The following is a multiple-choice question about \textbf{question answering}.\\
+Answer based on your world knowledge. You only need to output the option.\\[2pt]
+Question: What is the capital of France? \ldots\ Answer:
+\end{block}
+
+\vspace{4pt}
+\centering\small Results averaged over all 3 strategies to reduce prompt sensitivity.
+
+\end{frame}
+
+% ================================================================
+\begin{frame}{How Logits Are Obtained from LLMs}
+
+\begin{columns}[T]
+  \begin{column}{0.48\textwidth}
+    \begin{block}{\textbf{Open-source} (HuggingFace)}
+    \small
+    \begin{enumerate}\setlength\itemsep{3pt}
+      \item Run one \textbf{forward pass} on the prompt
+      \item Extract logits at the \textbf{last token position}
+      \item Slice values for tokens \texttt{A, B, C, D, E, F}
+      \item Apply \textbf{softmax} $\to$ $P(X)$
+    \end{enumerate}
+    \textcolor{steelblue}{\small $\Rightarrow$ 1 call, exact vocabulary distribution}
+    \end{block}
+  \end{column}
+  \begin{column}{0.48\textwidth}
+    \begin{block}{\textbf{Closed-source} (GPT-3.5/4)}
+    \small
+    \begin{enumerate}\setlength\itemsep{3pt}
+      \item \textbf{Sample 50 answers} per question
+      \item Count frequency of each option
+      \item Normalize $\to$ estimated $P(X)$
+      \item Apply temperature scaling to avoid zero probs
+    \end{enumerate}
+    \textcolor{darkred}{\small $\Rightarrow$ 50 calls, approximation (JSD\,$=0.05$)}
+    \end{block}
+  \end{column}
+\end{columns}
+
+\medskip
+
+\begin{block}{\textbf{Our implementation} (Ollama / qwen3.5:4b)}
+\small
+Ollama does not expose full vocabulary logits $\Rightarrow$ \textbf{6 API calls} per question:\\
+append \texttt{" A"}, \texttt{" B"}, \ldots, \texttt{" F"} to prompt $\to$ read logprob of that continuation token.
+\end{block}
+
+\end{frame}
+
+% ================================================================
 \begin{frame}{Methodology -- Conformal Prediction}
 
 \begin{block}{\textbf{Coverage Guarantee}}
@@ -172,8 +278,8 @@
     \pckw{for each} prompt strategy $p \in \{$base, shared, task$\}$ \pckw{do} &
     \pccomment{3 strategies} \\
   \textcolor{steelblue}{\textbf{2}} &
-    \quad\pckw{for each} ICL setting $k \in \{$0-shot, few-shot, CoT$\}$ \pckw{do} &
-    \pccomment{3 ICL modes} \\
+    \quad\pckw{for each} ICL setting $k \in \{$0-shot, few-shot$\}$ \pckw{do} &
+    \pccomment{2 ICL modes} \\
   \textcolor{steelblue}{\textbf{3}} &
     \quad\quad $P(X)\leftarrow\mathrm{Softmax}(\mathrm{logits}_{\mathcal{M}}(X_{p,k}))$\; \pckw{for all} $X\in\mathcal{D}$ &
     \pccomment{query LLM} \\
@@ -338,6 +444,39 @@ Falcon-7B        & 3.90 & 3.60 & 3.66 & 3.64 & 3.92 & 3.75 \\
 \end{frame}
 
 % ================================================================
+\begin{frame}{Results -- Closed-Source LLMs (Table\,4)}
+
+\begin{block}{\textbf{MMLU (QA task) only} \small-- sampling-based probability estimation}
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{LLM} & \textbf{CR\,(\%)} & \textbf{Acc\,(\%)\,$\uparrow$} & \textbf{SS\,$\downarrow$} \\
+\midrule
+\hrow GPT-4              & 90.41 & \textbf{81.75} & \textbf{1.65} \\
+GPT-3.5                  & 89.98 & 62.99 & 3.05 \\
+%Qwen-72B \small(sampling)& 90.54 & 70.29 & 2.43 \\
+%Qwen-72B \small(logits)  & 93.34 & 73.55 & 2.33 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{block}
+
+\medskip
+
+\begin{block}{\textbf{Key observations}}
+\small
+\begin{itemize}\setlength\itemsep{2pt}
+  \item \textbf{GPT-4} achieves highest Acc (81.75\%) and lowest SS (1.65) -- most accurate and certain.
+  \item \textbf{GPT-3.5} CR falls below 90\% -- sampling approximation less reliable.
+%  \item Sampling vs.\ logits for Qwen-72B: \textbf{JSD\,$=0.05$} -- sampling is a good approximation.
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+% ================================================================
 \begin{frame}{Results -- CP vs.\ Perplexity (InternLM-7B)}
 
 \begin{block}{\textbf{Table\,2:} Coverage Rate (\%) \& Set Size -- target CR $\geq90\,\%$}
@@ -432,7 +571,6 @@ SS\,$=3.96$ reflects moderate uncertainty on MMLU.
 \begin{itemize}\setlength\itemsep{4pt}
   \item Accuracy alone is \textbf{insufficient} for LLM evaluation.
   \item Conformal prediction offers a \textbf{rigorous, model-agnostic} uncertainty measure.
-  \item New \textbf{UAcc} metric jointly captures accuracy and certainty.
   \item Three findings: Acc\,$\neq$\,certainty;\; larger\,$\neq$\,more certain;\;
         finetuning raises uncertainty.
 \end{itemize}
