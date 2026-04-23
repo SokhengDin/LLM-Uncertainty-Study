@@ -31,6 +31,7 @@ _PREFERRED_ORDER = [
     # Kaggle/HF names (kaggle_benchmark)
     "qwen3-0.6b", "qwen2.5-3b", "qwen2.5-7b",
     "gemma-2b", "gemma-7b", "gemma-3-1b", "gemma-3-4b",
+    "olmo-1b", "olmo-7b",
     "llama3.2-1b", "llama3.1-8b",
 ]
 
@@ -53,6 +54,8 @@ _LABEL_MAP = {
     "gemma-2b":    "Gemma\n2B",
     "gemma-7b":    "Gemma\n7B",
     "gemma-3-1b":  "Gemma3\n1B",
+    "olmo-1b":     "OLMo\n1B",
+    "olmo-7b":     "OLMo\n7B",
     "gemma-3-4b":  "Gemma3\n4B",
     "llama3.2-1b": "Llama3.2\n1B",
     "llama3.1-8b": "Llama3.1\n8B",
