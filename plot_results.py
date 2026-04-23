@@ -21,20 +21,43 @@ FIGURES_DIR = "figures"
 
 # Overridden at runtime by --results_dir / --figures_dir args
 
-MODELS_ORDER = [
-    "qwen3.5:2b",
-    "qwen3.5:4b",
-    "qwen3.5:9b",
-    "gemma4:e4b",
-    "llama3.1:latest",
+# Preferred display order — models not listed here appear at the end alphabetically
+_PREFERRED_ORDER = [
+    # Ollama names (colab_benchmark)
+    "qwen3.5:2b", "qwen3.5:4b", "qwen3.5:9b", "gemma4:e4b", "llama3.1:latest",
+    # NIM names (run_nim.py)
+    "llama-3.1-8b-instruct", "llama-3.2-3b-instruct", "llama-3.2-1b-instruct",
+    "llama-3.1-nemotron-nano-8b-v1",
+    # Kaggle/HF names (kaggle_benchmark)
+    "qwen3-0.6b", "qwen2.5-3b", "qwen2.5-7b", "gemma-3-1b", "gemma-3-4b",
+    "llama3.2-1b", "llama3.1-8b",
 ]
-MODEL_LABELS = {
+
+_LABEL_MAP = {
+    # Ollama
     "qwen3.5:2b":      "Qwen3.5\n2B",
     "qwen3.5:4b":      "Qwen3.5\n4B",
     "qwen3.5:9b":      "Qwen3.5\n9B",
     "gemma4:e4b":      "Gemma4\nE4B",
     "llama3.1:latest": "Llama3.1\n8B",
+    # NIM
+    "llama-3.1-8b-instruct":        "Llama3.1\n8B",
+    "llama-3.2-3b-instruct":        "Llama3.2\n3B",
+    "llama-3.2-1b-instruct":        "Llama3.2\n1B",
+    "llama-3.1-nemotron-nano-8b-v1":"Nemotron\n8B",
+    # Kaggle/HF
+    "qwen3-0.6b":  "Qwen3\n0.6B",
+    "qwen2.5-3b":  "Qwen2.5\n3B",
+    "qwen2.5-7b":  "Qwen2.5\n7B",
+    "gemma-3-1b":  "Gemma3\n1B",
+    "gemma-3-4b":  "Gemma3\n4B",
+    "llama3.2-1b": "Llama3.2\n1B",
+    "llama3.1-8b": "Llama3.1\n8B",
 }
+
+# Populated dynamically in main() from the results directory
+MODELS_ORDER = []
+MODEL_LABELS = {}
 
 DATASETS_ORDER = [
     "mmlu_10k",
@@ -58,8 +81,21 @@ COLORS = {
 }
 
 
+def discover_models():
+    """Find all *_all_results.json files and return model short-names in preferred order."""
+    found = []
+    for fname in os.listdir(OUTPUTS_DIR):
+        if fname.endswith("_all_results.json"):
+            model = fname[: -len("_all_results.json")]
+            found.append(model)
+    # Sort: preferred order first, then alphabetical for unknowns
+    order = {m: i for i, m in enumerate(_PREFERRED_ORDER)}
+    found.sort(key=lambda m: (order.get(m, 999), m))
+    return found
+
+
 def load_all(key):
-    """Load results for all models. key = 'base_icl1' etc."""
+    """Load results for all discovered models. key = 'base_icl1' etc."""
     results = {}
     for m in MODELS_ORDER:
         path = os.path.join(OUTPUTS_DIR, f"{m}_all_results.json")
@@ -88,11 +124,11 @@ def fig_by_model(results, key, samples):
     n_tasks   = len(DATASETS_ORDER)
     task_colors = plt.cm.tab10(np.linspace(0, 0.9, n_tasks))
 
-    for metric_idx, (metric, ylabel, ylim) in enumerate([
+    for (metric, ylabel, ylim) in [
         ("Acc", "Accuracy (%)", (0, 100)),
         ("CR",  "Coverage Rate (%)", (0, 110)),
         ("SS",  "Set Size", (0, 7)),
-    ]):
+    ]:
         fig, ax = plt.subplots(figsize=(10, 4))
         w  = 0.14
         xs = np.arange(n_models)
@@ -221,7 +257,7 @@ def fig_heatmap(results, key, metric, samples):
 
 
 def main():
-    global OUTPUTS_DIR, FIGURES_DIR
+    global OUTPUTS_DIR, FIGURES_DIR, MODELS_ORDER, MODEL_LABELS
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--samples",     type=int, default=50)
@@ -235,6 +271,14 @@ def main():
         OUTPUTS_DIR = args.results_dir
     if args.figures_dir:
         FIGURES_DIR = args.figures_dir
+
+    # Auto-discover models present in the results directory
+    MODELS_ORDER = discover_models()
+    MODEL_LABELS = {m: _LABEL_MAP.get(m, m.replace("-", "\n")) for m in MODELS_ORDER}
+    if not MODELS_ORDER:
+        print(f"No *_all_results.json files found in {OUTPUTS_DIR}/")
+        return
+    print(f"Found {len(MODELS_ORDER)} models: {MODELS_ORDER}")
 
     key = f"{args.prompt}_{args.icl}"
     os.makedirs(FIGURES_DIR, exist_ok=True)
