@@ -28,8 +28,8 @@ DATASETS=(
 MODELS=(
     "qwen3.5:2b"
     "qwen3.5:4b"
-    "qwen3.5:9b"
-    "gemma4:e4b"
+    # "qwen3.5:9b"
+    # "gemma4:e4b"
     "llama3.1:latest"
 )
 

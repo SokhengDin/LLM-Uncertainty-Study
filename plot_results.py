@@ -19,6 +19,8 @@ import matplotlib.ticker as mticker
 OUTPUTS_DIR = "outputs_base"
 FIGURES_DIR = "figures"
 
+# Overridden at runtime by --results_dir / --figures_dir args
+
 MODELS_ORDER = [
     "qwen3.5:2b",
     "qwen3.5:4b",
@@ -219,11 +221,20 @@ def fig_heatmap(results, key, metric, samples):
 
 
 def main():
+    global OUTPUTS_DIR, FIGURES_DIR
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", type=int, default=50)
-    parser.add_argument("--prompt",  type=str, default="base")
-    parser.add_argument("--icl",     type=str, default="icl1")
+    parser.add_argument("--samples",     type=int, default=50)
+    parser.add_argument("--prompt",      type=str, default="base")
+    parser.add_argument("--icl",         type=str, default="icl1")
+    parser.add_argument("--results_dir", type=str, default=None)
+    parser.add_argument("--figures_dir", type=str, default=None)
     args = parser.parse_args()
+
+    if args.results_dir:
+        OUTPUTS_DIR = args.results_dir
+    if args.figures_dir:
+        FIGURES_DIR = args.figures_dir
 
     key = f"{args.prompt}_{args.icl}"
     os.makedirs(FIGURES_DIR, exist_ok=True)

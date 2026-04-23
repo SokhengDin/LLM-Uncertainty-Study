@@ -60,3 +60,6 @@ reports/.DS_Store
 
 # Report PDFs (compiled)
 reports/**/*.pdf
+
+# secret env
+.env
