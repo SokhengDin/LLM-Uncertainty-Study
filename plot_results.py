@@ -29,7 +29,8 @@ _PREFERRED_ORDER = [
     "llama-3.1-8b-instruct", "llama-3.2-3b-instruct", "llama-3.2-1b-instruct",
     "llama-3.1-nemotron-nano-8b-v1",
     # Kaggle/HF names (kaggle_benchmark)
-    "qwen3-0.6b", "qwen2.5-3b", "qwen2.5-7b", "gemma-3-1b", "gemma-3-4b",
+    "qwen3-0.6b", "qwen2.5-3b", "qwen2.5-7b",
+    "gemma-2b", "gemma-7b", "gemma-3-1b", "gemma-3-4b",
     "llama3.2-1b", "llama3.1-8b",
 ]
 
@@ -49,6 +50,8 @@ _LABEL_MAP = {
     "qwen3-0.6b":  "Qwen3\n0.6B",
     "qwen2.5-3b":  "Qwen2.5\n3B",
     "qwen2.5-7b":  "Qwen2.5\n7B",
+    "gemma-2b":    "Gemma\n2B",
+    "gemma-7b":    "Gemma\n7B",
     "gemma-3-1b":  "Gemma3\n1B",
     "gemma-3-4b":  "Gemma3\n4B",
     "llama3.2-1b": "Llama3.2\n1B",
