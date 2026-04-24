@@ -37,15 +37,6 @@ $$s_{\text{APS}}(x, y) = \sum_{y' : \hat{p}(y' \mid x) \geq \hat{p}(y \mid x)} \
 ECE measures how well model confidence (max softmax probability) matches empirical accuracy across $B$ equal-width bins (Guo et al., ICML 2017):
 
 $$\text{ECE} = \sum_{b=1}^{B} \frac{|B_b|}{n} \left| \text{acc}(B_b) - \text{conf}(B_b) \right|$$
-
-### Weighted Conformal Prediction under Prompt Shift
-
-When calibrating on prompt $p_{k_\text{cal}}$ and deploying under prompt $p_{k_\text{test}}$, exchangeability fails. Reweighting by the likelihood ratio $w(x) = dP_{k_\text{test}}/dP_{k_\text{cal}}(x)$ restores the guarantee (Tibshirani et al., NeurIPS 2019):
-
-$$\hat{q}^w_\alpha = \inf\!\left\{q : \sum_{i=1}^n p_i^w\,\mathbf{1}[s_i \leq q] + p_{n+1}^w \geq 1-\alpha \right\}$$
-
-where $p_i^w = w(X_i) \big/ \bigl(\sum_j w(X_j) + w(X_{n+1})\bigr)$.
-
 ---
 
 ## Project Structure
