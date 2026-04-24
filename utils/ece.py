@@ -1,21 +1,3 @@
-"""
-Expected Calibration Error (ECE) for MCQA with softmax logits.
-
-ECE measures how well model confidence (max softmax probability) matches
-empirical accuracy. A perfectly calibrated model satisfies:
-    P(correct | confidence = p) = p  for all p.
-
-Standard equal-width bin estimator (Guo et al., ICML 2017):
-    ECE = sum_b (|B_b| / n) * |acc(B_b) - conf(B_b)|
-
-The split logic (load_test_split) replicates exactly the cal/test partition
-used in kaggle_benchmark.ipynb so ECE is computed on the same n=50 test
-samples that produced the Acc/SS/CR results.
-
-References:
-    Guo et al. (2017). On Calibration of Modern Neural Networks. ICML.
-"""
-
 import json
 import pickle
 import random
@@ -137,3 +119,66 @@ def reliability_diagram(ece_result, ax=None, title=""):
     ax.set_title(f"{title}\nECE={ece_result['ece']:.4f}")
     ax.legend(fontsize=8)
     return ax
+
+
+if __name__ == "__main__":
+    import argparse, json, os
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out_dir",    default="outputs_kaggle")
+    parser.add_argument("--data_dir",   default="data")
+    parser.add_argument("--fig_dir",    default="figures")
+    parser.add_argument("--samples",    type=int, default=100)
+    parser.add_argument("--n_bins",     type=int, default=10)
+    args = parser.parse_args()
+
+    models   = ["qwen3-0.6b", "qwen2.5-3b", "qwen2.5-7b", "olmo-1b", "olmo-7b"]
+    datasets = ["mmlu_10k", "hellaswag_10k", "cosmosqa_10k", "halu_dialogue", "halu_summarization"]
+    ds_labels = {
+        "mmlu_10k": "MMLU", "hellaswag_10k": "HellaSwag", "cosmosqa_10k": "CosmosQA",
+        "halu_dialogue": "HaluDial", "halu_summarization": "HaluSum",
+    }
+    os.makedirs(args.fig_dir, exist_ok=True)
+
+    results = compute_ece_all(models, datasets, args.out_dir, args.data_dir, args.samples, args.n_bins)
+
+    # ── Print table 
+    print(f"\nECE Table (n_bins={args.n_bins})")
+    print(f"{'Model':<14}", end="")
+    for ds in datasets:
+        print(f"  {ds_labels[ds]:>10}", end="")
+    print()
+    print("-" * (14 + 13 * len(datasets)))
+    for m in models:
+        print(f"{m:<14}", end="")
+        for ds in datasets:
+            v = results.get(m, {}).get(ds, {}).get("ece", None)
+            print(f"  {'N/A':>10}" if v is None else f"  {v:>10.4f}", end="")
+        print()
+
+    # ── Heatmap 
+    import numpy as np
+    ece_mat = np.full((len(models), len(datasets)), np.nan)
+    for i, m in enumerate(models):
+        for j, ds in enumerate(datasets):
+            v = results.get(m, {}).get(ds, {}).get("ece", None)
+            if v is not None:
+                ece_mat[i, j] = v
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    im = ax.imshow(ece_mat, cmap="RdYlGn_r", vmin=0.1, vmax=0.55, aspect="auto")
+    plt.colorbar(im, ax=ax, label="ECE")
+    ax.set_xticks(range(len(datasets))); ax.set_xticklabels([ds_labels[d] for d in datasets], rotation=15, ha="right")
+    ax.set_yticks(range(len(models)));   ax.set_yticklabels(models)
+    for i in range(len(models)):
+        for j in range(len(datasets)):
+            if not np.isnan(ece_mat[i, j]):
+                ax.text(j, i, f"{ece_mat[i,j]:.2f}", ha="center", va="center", fontsize=9)
+    ax.set_title("ECE Heatmap (5×5)")
+    plt.tight_layout()
+    out = os.path.join(args.fig_dir, "fig_ece_heatmap.pdf")
+    plt.savefig(out, bbox_inches="tight"); plt.close()
+    print(f"\nSaved {out}")

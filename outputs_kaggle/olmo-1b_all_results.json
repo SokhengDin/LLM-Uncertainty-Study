@@ -13,7 +13,7 @@
       "base_icl1": 5.74
     },
     "APS_set_size": {
-      "base_icl1": 5.84
+      "base_icl1": 5.8
     },
     "LAC_coverage": {
       "base_icl1": 0.96
@@ -25,7 +25,7 @@
       "base_icl1": 0.1450917269244391
     },
     "UAcc_APS": {
-      "base_icl1": 0.142607279545596
+      "base_icl1": 0.14359077802522077
     }
   },
   "cosmosqa_10k": {
@@ -42,7 +42,7 @@
       "base_icl1": 5.68
     },
     "APS_set_size": {
-      "base_icl1": 5.84
+      "base_icl1": 5.88
     },
     "LAC_coverage": {
       "base_icl1": 0.9
@@ -54,7 +54,7 @@
       "base_icl1": 0.09487460271343295
     },
     "UAcc_APS": {
-      "base_icl1": 0.09227529852950328
+      "base_icl1": 0.09164757541025496
     }
   },
   "hellaswag_10k": {
@@ -71,19 +71,19 @@
       "base_icl1": 5.76
     },
     "APS_set_size": {
-      "base_icl1": 5.78
+      "base_icl1": 6.0
     },
     "LAC_coverage": {
       "base_icl1": 0.92
     },
     "APS_coverage": {
-      "base_icl1": 0.96
+      "base_icl1": 1.0
     },
     "UAcc_LAC": {
       "base_icl1": 0.11056724533396291
     },
     "UAcc_APS": {
-      "base_icl1": 0.11018465970996995
+      "base_icl1": 0.10614455552060438
     }
   },
   "halu_dialogue": {
@@ -100,7 +100,7 @@
       "base_icl1": 5.74
     },
     "APS_set_size": {
-      "base_icl1": 5.84
+      "base_icl1": 5.82
     },
     "LAC_coverage": {
       "base_icl1": 0.92
@@ -112,7 +112,7 @@
       "base_icl1": 0.11948730452600868
     },
     "UAcc_APS": {
-      "base_icl1": 0.11744128903754963
+      "base_icl1": 0.11784486735039344
     }
   },
   "halu_summarization": {
@@ -129,19 +129,19 @@
       "base_icl1": 5.58
     },
     "APS_set_size": {
-      "base_icl1": 5.76
+      "base_icl1": 5.82
     },
     "LAC_coverage": {
       "base_icl1": 0.96
     },
     "APS_coverage": {
-      "base_icl1": 0.96
+      "base_icl1": 0.98
     },
     "UAcc_LAC": {
       "base_icl1": 0.12291346379557166
     },
     "UAcc_APS": {
-      "base_icl1": 0.11907241805196005
+      "base_icl1": 0.11784486735039344
     }
   }
 }

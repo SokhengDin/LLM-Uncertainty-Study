@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Collect benchmark results from outputs_base/ and print a clean summary table.
-Run after run_benchmark.sh completes.
-"""
-
 import json
 import os
 import glob
