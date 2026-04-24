@@ -17,20 +17,6 @@ NIM_MODELS = {
 
 
 class NIMClient:
-    """
-    NVIDIA NIM client — scores each choice A-F via real token logprobs.
-
-    Unlike OllamaClient (continuation scoring), NIM returns logprobs for the
-    first generated token, which is the model's direct distribution over the
-    vocabulary.  We read logprob("A"), logprob("B"), ... from a single API call,
-    which is both faster and more accurate than 6 separate continuation calls.
-
-    Args:
-        model_name: NIM model ID (e.g. "meta/llama-3.1-8b-instruct") or
-                    a shorthand key from NIM_MODELS dict above.
-        api_key:    NVIDIA API key (nvapi-...).
-        base_url:   NIM endpoint, default is NVIDIA's hosted API.
-    """
 
     def __init__(
         self,

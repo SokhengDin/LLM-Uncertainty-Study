@@ -1,0 +1,147 @@
+{
+  "mmlu_10k": {
+    "Acc": {
+      "base_icl1": 0.62
+    },
+    "E_rate": {
+      "base_icl1": 0.04
+    },
+    "F_rate": {
+      "base_icl1": 0.0
+    },
+    "LAC_set_size": {
+      "base_icl1": 3.7
+    },
+    "APS_set_size": {
+      "base_icl1": 4.12
+    },
+    "LAC_coverage": {
+      "base_icl1": 0.94
+    },
+    "APS_coverage": {
+      "base_icl1": 0.9
+    },
+    "UAcc_LAC": {
+      "base_icl1": 0.41045503797988386
+    },
+    "UAcc_APS": {
+      "base_icl1": 0.36861253410814815
+    }
+  },
+  "cosmosqa_10k": {
+    "Acc": {
+      "base_icl1": 0.72
+    },
+    "E_rate": {
+      "base_icl1": 0.2
+    },
+    "F_rate": {
+      "base_icl1": 0.0
+    },
+    "LAC_set_size": {
+      "base_icl1": 2.02
+    },
+    "APS_set_size": {
+      "base_icl1": 2.4
+    },
+    "LAC_coverage": {
+      "base_icl1": 0.88
+    },
+    "APS_coverage": {
+      "base_icl1": 0.9
+    },
+    "UAcc_LAC": {
+      "base_icl1": 0.8730854528732119
+    },
+    "UAcc_APS": {
+      "base_icl1": 0.7348469228349535
+    }
+  },
+  "hellaswag_10k": {
+    "Acc": {
+      "base_icl1": 0.74
+    },
+    "E_rate": {
+      "base_icl1": 0.02
+    },
+    "F_rate": {
+      "base_icl1": 0.12
+    },
+    "LAC_set_size": {
+      "base_icl1": 1.4
+    },
+    "APS_set_size": {
+      "base_icl1": 2.42
+    },
+    "LAC_coverage": {
+      "base_icl1": 0.82
+    },
+    "APS_coverage": {
+      "base_icl1": 0.9
+    },
+    "UAcc_LAC": {
+      "base_icl1": 1.2947302926139654
+    },
+    "UAcc_APS": {
+      "base_icl1": 0.7490175246527073
+    }
+  },
+  "halu_dialogue": {
+    "Acc": {
+      "base_icl1": 0.46
+    },
+    "E_rate": {
+      "base_icl1": 0.04
+    },
+    "F_rate": {
+      "base_icl1": 0.18
+    },
+    "LAC_set_size": {
+      "base_icl1": 3.92
+    },
+    "APS_set_size": {
+      "base_icl1": 4.36
+    },
+    "LAC_coverage": {
+      "base_icl1": 0.92
+    },
+    "APS_coverage": {
+      "base_icl1": 0.98
+    },
+    "UAcc_LAC": {
+      "base_icl1": 0.28744012287761783
+    },
+    "UAcc_APS": {
+      "base_icl1": 0.2584324040551059
+    }
+  },
+  "halu_summarization": {
+    "Acc": {
+      "base_icl1": 0.6
+    },
+    "E_rate": {
+      "base_icl1": 0.0
+    },
+    "F_rate": {
+      "base_icl1": 0.06
+    },
+    "LAC_set_size": {
+      "base_icl1": 3.34
+    },
+    "APS_set_size": {
+      "base_icl1": 4.1
+    },
+    "LAC_coverage": {
+      "base_icl1": 0.96
+    },
+    "APS_coverage": {
+      "base_icl1": 1.0
+    },
+    "UAcc_LAC": {
+      "base_icl1": 0.4400280975059601
+    },
+    "UAcc_APS": {
+      "base_icl1": 0.35846191357802604
+    }
+  }
+}
